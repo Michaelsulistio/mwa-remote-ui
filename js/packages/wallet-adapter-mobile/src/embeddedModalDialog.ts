@@ -1,5 +1,3 @@
-import './embeddedStyles.css';
-
 export class EmbeddedDialogModal {
     private _title: string;
     private _root: HTMLElement | null = null;
@@ -44,13 +42,6 @@ export class EmbeddedDialogModal {
 
         document.head.appendChild(link);
     }
-
-    // private injectCSS() {
-    //     const link = document.createElement('link');
-    //     link.rel = 'stylesheet';
-    //     link.href = './bundled.css'; // Adjust this path as needed
-    //     document.head.appendChild(link);
-    // }
 
     private injectHTML() {
         const html = `

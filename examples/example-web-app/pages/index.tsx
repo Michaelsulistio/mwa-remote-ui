@@ -1,5 +1,7 @@
 import { AppBar, Stack, TextField, Toolbar, Typography } from '@mui/material';
-import React, { useState } from 'react';
+import React, { useMemo, useState } from 'react';
+
+import '../node_modules/@solana-mobile/wallet-adapter-mobile/styles.css';
 
 import AccountInfo from '../components/AccountInfo';
 import DisconnectButton from '../components/DisconnectButton';
@@ -11,6 +13,7 @@ import SignMessageButton from '../components/SignMessageButton';
 import { styled } from '@mui/material/styles';
 import { useWallet } from '@solana/wallet-adapter-react';
 import dynamic from 'next/dynamic';
+import { EmbeddedDialogModal } from '@solana-mobile/wallet-adapter-mobile';
 
 const Offset = styled('div')(
     // @ts-ignore
@@ -22,6 +25,10 @@ const ConnectButtonDynamic = dynamic(() => import('../components/ConnectButton')
 const Home: NextPage = () => {
     const { publicKey } = useWallet();
     const [memoText, setMemoText] = useState('');
+    const dialog = useMemo(() => {
+        return new EmbeddedDialogModal('test');
+    }, []);
+
     return (
         <>
             <AppBar position="fixed">
@@ -40,6 +47,7 @@ const Home: NextPage = () => {
             </AppBar>
             <Offset />
             <Stack p={2} spacing={2} flexGrow={1}>
+                <button onClick={dialog.init}></button>
                 <Typography>Write a message to record on the blockchain.</Typography>
                 <TextField
                     disabled={publicKey == null}
@@ -57,9 +65,7 @@ const Home: NextPage = () => {
                         Disconnect
                     </DisconnectButton>
                 ) : (
-                    <SignInButton variant="outlined">
-                        Sign In
-                    </SignInButton>
+                    <SignInButton variant="outlined">Sign In</SignInButton>
                 )}
             </Stack>
         </>

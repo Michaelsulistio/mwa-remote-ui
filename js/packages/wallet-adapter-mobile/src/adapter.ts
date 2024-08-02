@@ -31,13 +31,14 @@ import {
     SolanaMobileWalletAdapterErrorCode,
 } from '@solana-mobile/mobile-wallet-adapter-protocol';
 import { Chain, Cluster } from '@solana-mobile/mobile-wallet-adapter-protocol';
-import { transact,Web3MobileWallet } from '@solana-mobile/mobile-wallet-adapter-protocol-web3js';
+import { transact, Web3MobileWallet } from '@solana-mobile/mobile-wallet-adapter-protocol-web3js';
 
 import { toUint8Array } from './base64Utils.js';
 import getIsSupported from './getIsSupported.js';
 import { SolanaSignInInput, SolanaSignInOutput } from '@solana/wallet-standard-features';
 import type { WalletAccount } from '@wallet-standard/core';
 import { SignInPayload } from '@solana-mobile/mobile-wallet-adapter-protocol';
+import { EmbeddedDialogModal } from './embeddedModalDialog.js';
 
 export interface AuthorizationResultCache {
     clear(): Promise<void>;
@@ -69,7 +70,7 @@ export class SolanaMobileWalletAdapter extends BaseSignInMessageSignerWalletAdap
         // FIXME(#244): We can't actually know what versions are supported until we know which wallet we're talking to.
         ['legacy', 0],
     );
-    name = SolanaMobileWalletAdapterWalletName;
+    name = 'MWA (Remote)' as WalletName;
     url = 'https://solanamobile.com/wallets';
     icon =
         'data:image/svg+xml;base64,PHN2ZyBmaWxsPSJub25lIiBoZWlnaHQ9IjI4IiB3aWR0aD0iMjgiIHZpZXdCb3g9Ii0zIDAgMjggMjgiIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyI+PGcgZmlsbD0iI0RDQjhGRiI+PHBhdGggZD0iTTE3LjQgMTcuNEgxNXYyLjRoMi40di0yLjRabTEuMi05LjZoLTIuNHYyLjRoMi40VjcuOFoiLz48cGF0aCBkPSJNMjEuNiAzVjBoLTIuNHYzaC0zLjZWMGgtMi40djNoLTIuNHY2LjZINC41YTIuMSAyLjEgMCAxIDEgMC00LjJoMi43VjNINC41QTQuNSA0LjUgMCAwIDAgMCA3LjVWMjRoMjEuNnYtNi42aC0yLjR2NC4ySDIuNFYxMS41Yy41LjMgMS4yLjQgMS44LjVoNy41QTYuNiA2LjYgMCAwIDAgMjQgOVYzaC0yLjRabTAgNS43YTQuMiA0LjIgMCAxIDEtOC40IDBWNS40aDguNHYzLjNaIi8+PC9nPjwvc3ZnPg==';
@@ -124,6 +125,7 @@ export class SolanaMobileWalletAdapter extends BaseSignInMessageSignerWalletAdap
         this._appIdentity = config.appIdentity;
         this._chain = config.chain ?? config.cluster;
         this._onWalletNotFound = config.onWalletNotFound;
+        this.declareWalletAsInstalled();
         if (this._readyState !== WalletReadyState.Unsupported) {
             this._authorizationResultCache.get().then((authorizationResult) => {
                 if (authorizationResult) {
@@ -206,19 +208,23 @@ export class SolanaMobileWalletAdapter extends BaseSignInMessageSignerWalletAdap
         if (this.connecting || this.connected) {
             return;
         }
-        return await this.runWithGuard(async () => {
-            if (this._readyState !== WalletReadyState.Installed && this._readyState !== WalletReadyState.Loadable) {
-                throw new WalletNotReadyError();
-            }
-            this._connecting = true;
-            try {
-                await this.performAuthorization();
-            } catch (e) {
-                throw new WalletConnectionError((e instanceof Error && e.message) || 'Unknown error', e);
-            } finally {
-                this._connecting = false;
-            }
-        });
+
+        const dialog = new EmbeddedDialogModal('title');
+        dialog.init();
+
+        // return await this.runWithGuard(async () => {
+        //     if (this._readyState !== WalletReadyState.Installed && this._readyState !== WalletReadyState.Loadable) {
+        //         throw new WalletNotReadyError();
+        //     }
+        //     this._connecting = true;
+        //     try {
+        //         await this.performAuthorization();
+        //     } catch (e) {
+        //         throw new WalletConnectionError((e instanceof Error && e.message) || 'Unknown error', e);
+        //     } finally {
+        //         this._connecting = false;
+        //     }
+        // });
     }
 
     async performAuthorization(signInPayload?: SignInPayload): Promise<AuthorizationResult> {
@@ -319,7 +325,7 @@ export class SolanaMobileWalletAdapter extends BaseSignInMessageSignerWalletAdap
                 e.name === 'SolanaMobileWalletAdapterError' &&
                 (
                     e as SolanaMobileWalletAdapterError<
-                        typeof SolanaMobileWalletAdapterErrorCode[keyof typeof SolanaMobileWalletAdapterErrorCode]
+                        (typeof SolanaMobileWalletAdapterErrorCode)[keyof typeof SolanaMobileWalletAdapterErrorCode]
                     >
                 ).code === 'ERROR_WALLET_NOT_FOUND'
             ) {
@@ -489,22 +495,22 @@ export class SolanaMobileWalletAdapter extends BaseSignInMessageSignerWalletAdap
             try {
                 const authorizationResult = await this.performAuthorization({
                     ...input,
-                    domain: input?.domain ?? window.location.host
+                    domain: input?.domain ?? window.location.host,
                 });
                 if (!authorizationResult.sign_in_result) {
-                    throw new Error("Sign in failed, no sign in result returned by wallet");
+                    throw new Error('Sign in failed, no sign in result returned by wallet');
                 }
                 const signedInAddress = authorizationResult.sign_in_result.address;
                 const signedInAccount: WalletAccount = {
-                    ...authorizationResult.accounts.find(acc => acc.address == signedInAddress) ?? {
-                        address: signedInAddress
-                    }, 
-                    publicKey: toUint8Array(signedInAddress)
+                    ...(authorizationResult.accounts.find((acc) => acc.address == signedInAddress) ?? {
+                        address: signedInAddress,
+                    }),
+                    publicKey: toUint8Array(signedInAddress),
                 } as WalletAccount;
                 return {
                     account: signedInAccount,
                     signedMessage: toUint8Array(authorizationResult.sign_in_result.signed_message),
-                    signature: toUint8Array(authorizationResult.sign_in_result.signature)
+                    signature: toUint8Array(authorizationResult.sign_in_result.signature),
                 };
             } catch (e) {
                 throw new WalletConnectionError((e instanceof Error && e.message) || 'Unknown error', e);
