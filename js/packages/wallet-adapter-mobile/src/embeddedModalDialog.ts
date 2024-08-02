@@ -1,4 +1,3 @@
-// eslint-disable-next-line require-extensions/require-extensions
 import './embeddedStyles.css';
 
 export class EmbeddedDialogModal {
@@ -18,6 +17,7 @@ export class EmbeddedDialogModal {
 
     async init() {
         console.log('Injecting modal');
+        this.injectStyles();
         this.injectHTML();
         this.attachEventListeners();
     }
@@ -33,6 +33,24 @@ export class EmbeddedDialogModal {
             }
         });
     }
+
+    private injectStyles() {
+        const link = document.createElement('link');
+        link.rel = 'stylesheet';
+        link.type = 'text/css';
+
+        // Assuming your package is installed in node_modules
+        link.href = '/node_modules/@solana-mobile/wallet-adapter-mobile/styles.css';
+
+        document.head.appendChild(link);
+    }
+
+    // private injectCSS() {
+    //     const link = document.createElement('link');
+    //     link.rel = 'stylesheet';
+    //     link.href = './bundled.css'; // Adjust this path as needed
+    //     document.head.appendChild(link);
+    // }
 
     private injectHTML() {
         const html = `
