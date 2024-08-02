@@ -2,10 +2,12 @@ import alias from '@rollup/plugin-alias';
 import commonJsPlugin from '@rollup/plugin-commonjs';
 import nodeResolve from '@rollup/plugin-node-resolve';
 import replace from '@rollup/plugin-replace';
+import autoprefixer from 'autoprefixer';
 import fs from 'fs';
 import * as path from 'path';
 import type { RollupOptions } from 'rollup';
 import externals from 'rollup-plugin-node-externals';
+import postcss from 'rollup-plugin-postcss';
 import ts from 'rollup-plugin-ts';
 
 function createConfig({
@@ -66,6 +68,12 @@ function createConfig({
                     'process.env.BROWSER': JSON.stringify(runtime === 'browser'),
                     'process.env.NODE_ENV': JSON.stringify(process.env.NODE_ENV),
                 },
+            }),
+            postcss({
+                plugins: [autoprefixer()],
+                extract: 'bundled.css', // This will extract all CSS to a separate file
+                minimize: true, // This will minify the CSS
+                modules: false, // Enable CSS modules if you're using them
             }),
             ts({
                 tsconfig: format === 'cjs' ? 'tsconfig.cjs.json' : 'tsconfig.json',
