@@ -152,3 +152,13 @@ background-color: #ddd; /* Placeholder for icon background */
     0% { transform: rotate(0deg); }
     100% { transform: rotate(360deg); }
   }
+
+  /* QR Code */
+
+  .mobile-wallet-adapter-embedded-modal-qr-code-container {
+    width: 500px;
+    height: 500px;
+    border-width: 2px;
+    border-color: white;
+    border-style: solid
+  }
