@@ -21,7 +21,6 @@
         "eslint-plugin-simple-import-sort": "^7.0.0",
         "lerna": "^5.1.8",
         "rollup": "^2.75.6",
-        "rollup-plugin-import-css": "^3.5.0",
         "rollup-plugin-node-externals": "^4.0.0",
         "rollup-plugin-ts": "^3.0.2",
         "shx": "^0.3.4",

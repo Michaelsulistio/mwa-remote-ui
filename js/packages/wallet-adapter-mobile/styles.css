@@ -155,10 +155,8 @@ background-color: #ddd; /* Placeholder for icon background */
 
   /* QR Code */
 
-  .mobile-wallet-adapter-embedded-modal-qr-code-container {
+  #mobile-wallet-adapter-embedded-modal-qr-code-container {
     width: 500px;
     height: 500px;
-    border-width: 2px;
-    border-color: white;
-    border-style: solid
+    align-content: center;
   }

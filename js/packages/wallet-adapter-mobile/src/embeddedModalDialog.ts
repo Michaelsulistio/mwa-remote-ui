@@ -1,3 +1,5 @@
+import QRCode from 'qrcode';
+
 export class EmbeddedDialogModal {
     private _title: string;
     private _root: HTMLElement | null = null;
@@ -18,6 +20,7 @@ export class EmbeddedDialogModal {
         this.injectStyles();
         this.injectQRCodeHTML();
         this.attachEventListeners();
+        this.populateQRCode();
     }
 
     setConnectionStatus(status: 'not-connected' | 'connecting' | 'connected') {
@@ -43,6 +46,18 @@ export class EmbeddedDialogModal {
         document.head.appendChild(link);
     }
 
+    private async populateQRCode() {
+        const qrcodeContainer = document.getElementById('mobile-wallet-adapter-embedded-modal-qr-code-container');
+        // console.log(QRCode);
+        if (qrcodeContainer) {
+            // new QRCode(qrcodeContainer, 'http://jindo.dev.naver.com/collie');
+            const qrCodeElement = await QRCode.toCanvas('https://google.com', { width: 400 });
+            qrcodeContainer.appendChild(qrCodeElement);
+        } else {
+            console.error('QRCode Container not found');
+        }
+    }
+
     private injectQRCodeHTML() {
         const html = `
       <div class="mobile-wallet-adapter-embedded-modal-content">
@@ -53,9 +68,7 @@ export class EmbeddedDialogModal {
         </button>
         <h1>Scan to connect</h1>
         <p class="mobile-wallet-adapter-embedded-modal-subtitle">Use your wallet app to scan the QR Code and connect.</p>
-        <div class="mobile-wallet-adapter-embedded-modal-qr-code-container">
-            <p>test</p>
-        </div>
+        <div id="mobile-wallet-adapter-embedded-modal-qr-code-container" />
       </div>
     `;
 
